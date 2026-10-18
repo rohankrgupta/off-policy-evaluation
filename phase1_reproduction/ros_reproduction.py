@@ -5,7 +5,7 @@ MultiBandit with MultiBandit_5000. For OS (alpha = 0) and ROS (alpha = 1 ... 1e6
 of n = 16 ... 8192 trajectories. We report the relative MSE, MSE / v^2 (the repo's metric), against
 the exact DP value, next to the repo's stored runs (200 seeds).
 
-Run:    python ros_reproduction.py     (about 15 s)
+Run:    python -m phase1_reproduction.ros_reproduction     (about 15 s)
 Output: results/ros_reproduction.md, results/ros_reproduction.png
 """
 from pathlib import Path
@@ -13,7 +13,7 @@ from pathlib import Path
 import matplotlib
 import numpy as np
 
-from core import envs, exact, repo_io, sampling, stats
+from phase1_reproduction.core import envs, exact, repo_io, sampling, stats
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402

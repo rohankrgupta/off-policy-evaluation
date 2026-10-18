@@ -34,12 +34,12 @@ Full tables: [results/ros_reproduction.md](results/ros_reproduction.md) and [res
 
 ## Run
 
-From this directory, after the setup in the [top-level README](../README.md):
+From the repository root, after the setup in the [top-level README](../README.md):
 
 ```bash
-python tests.py               # sanity checks, 5 s
-python ros_reproduction.py    # 15 s; writes results/ros_reproduction.{md,png}
-python bps_reproduction.py    # 30 s; writes results/bps_reproduction.{md,png}
+python -m phase1_reproduction.tests               # sanity checks, 5 s
+python -m phase1_reproduction.ros_reproduction    # 15 s; writes results/ros_reproduction.{md,png}
+python -m phase1_reproduction.bps_reproduction    # 30 s; writes results/bps_reproduction.{md,png}
 ```
 
 All randomness comes from named streams, so reruns give identical numbers.

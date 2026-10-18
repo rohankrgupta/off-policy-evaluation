@@ -8,11 +8,12 @@ Rohan Gupta · CS 799 with Prof. Josiah Hanna · UW–Madison, Fall 2026
 
 Behavior policy search (BPS, [1]) attacks the first: it collects data with a lower-variance behavior policy and reweights it. Robust on-policy sampling (ROS, [2]) attacks the second: it steers each action so that the empirical action frequencies track the policy. Can the two be combined to beat both?
 
-Each directory is one phase with a positive result. Every number in a phase's README comes from the scripts in that directory.
+Each directory is one phase. Every number in a phase's README comes from the scripts in that directory, and all scripts run from the repository root with `python -m`.
 
 | Phase | Result |
 |---|---|
 | [1. Reproduction](phase1_reproduction/) | Both papers' results reproduce on the ROS repository's GridWorld and MultiBandit. We also identify why BPS looked no better than on-policy sampling in [2]. |
+| [2. BPS + ROS](phase2_bps_plus_ros/) | **Negative.** Tracking the BPS target with ROS does not beat ROS: ROS-MC wins by 2× to 2500× in GridWorld, and in the bandit the combination never beats both parents. Two reasons: BPS optimizes the wrong objective once ROS removes action-sampling variance, and per-state tracking cannot control trajectory-level importance weights. |
 
 ## Setup
 

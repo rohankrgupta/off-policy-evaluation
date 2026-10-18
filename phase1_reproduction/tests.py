@@ -3,11 +3,11 @@
   * the exact DP matches simulation and full enumeration;
   * BPG-V reaches the exact optimum.
 
-Run: python tests.py
+Run:    python -m phase1_reproduction.tests
 """
 import numpy as np
 
-from core import bpg, envs, exact, sampling
+from phase1_reproduction.core import bpg, envs, exact, sampling
 
 
 def test_environments_match_repo():

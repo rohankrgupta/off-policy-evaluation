@@ -14,7 +14,7 @@ iterations (1e5 trajectories) from pi_e, over 200 seeds. Everything is scored wi
 Part 2, why BPS looked no better than on-policy sampling in [2]. Both BPG settings are run at [2]'s
 budget of 8192 trajectories on pi_e-A and pi_e-B, over 1000 seeds.
 
-Run:    python bps_reproduction.py     (about 40 s)
+Run:    python -m phase1_reproduction.bps_reproduction     (about 40 s)
 Output: results/bps_reproduction.md, results/bps_reproduction.png
 """
 from pathlib import Path
@@ -22,7 +22,7 @@ from pathlib import Path
 import matplotlib
 import numpy as np
 
-from core import bpg, envs, exact, stats
+from phase1_reproduction.core import bpg, envs, exact, stats
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
