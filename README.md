@@ -8,7 +8,7 @@ Rohan Gupta · CS 799 with Prof. Josiah Hanna · UW–Madison, Fall 2026
 
 Behavior policy search (BPS, [1]) attacks the first: it collects data with a lower-variance behavior policy and reweights it. Robust on-policy sampling (ROS, [2]) attacks the second: it steers each action so that the empirical action frequencies track the policy. Can the two be combined to beat both?
 
-Each directory is one phase. Every number in a phase's README comes from the scripts in that directory, and all scripts run from the repository root with `python -m`.
+Each directory is one phase. Every result in a phase's README comes from the scripts in that directory, except lines explicitly marked as earlier experiments. All scripts run from the repository root with `python -m`.
 
 | Phase | Result |
 |---|---|
