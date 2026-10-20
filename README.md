@@ -14,6 +14,7 @@ Each directory is one phase. Every result in a phase's README comes from the scr
 |---|---|
 | [1. Reproduction](phase1_reproduction/) | Both papers' results reproduce on the ROS repository's GridWorld and MultiBandit. We also identify why BPS looked no better than on-policy sampling in [2]. |
 | [2. BPS + ROS](phase2_bps_plus_ros/) | **Negative.** Tracking the BPS target with ROS does not beat ROS: ROS-MC wins by 2× to 2500× in GridWorld, and in the bandit the combination never beats both parents. Two reasons: BPS optimizes the wrong objective once ROS removes action-sampling variance, and per-state tracking cannot control trajectory-level importance weights. |
+| [2.5. QMC with ROS and BPS](phase2_5_qmc/) | Randomized QMC samplers of the agent's actions (after Arnold et al., 2022). BPS works once its samples are coordinated: Array-RQMC with per-decision IS and merged weights is 1.5–70× better than BPS + OIS, unbiased, and matches or beats ROS-MC per episode with noise (ROS still wins in deterministic GridWorld). With smooth continuous actions, QMC beats ROS and PROPS by up to 185× and 670×. |
 | [3. Model-based allocation](phase3_mb_allocation/) | A model-based estimator plus a behavior chosen to minimize its variance per environment step: a ReVar-style allocation with unknown transitions, general MDPs and step budgets. At equal steps it beats ROS-MC by 1.15× and 1.6× where noise is large or uneven, and ties otherwise. ROS adds nothing on top. |
 
 ## Setup
