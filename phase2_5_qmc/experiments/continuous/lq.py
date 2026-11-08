@@ -8,8 +8,8 @@ ROS's alpha and PROPS's learning rate are tuned at each n on 500 other seeds. n 
 Reported as in experiments/array_rqmc.py: n·MSE/Var(g), paired MSE ratios, bias/SE and the coverage of 95% intervals
 from groups of 10 independent runs.
 
-Run:    python -m phase2_5_qmc.experiments.lq     (about 1 hour)
-Output: results/lq.md
+Run:    python -m phase2_5_qmc.experiments.continuous.lq     (about 1 hour)
+Output: results/continuous/lq.md
 """
 from pathlib import Path
 
@@ -21,7 +21,7 @@ from phase2_5_qmc.core import lq as L
 from phase2_5_qmc.experiments.array_rqmc import ci_stats
 from phase2_5_qmc.experiments.gridworld import md
 
-OUT = Path(__file__).resolve().parents[1] / "results"
+OUT = Path(__file__).resolve().parents[2] / "results" / "continuous"
 CONFIGS = [(1, 10, 0.0), (1, 10, 0.1), (1, 10, 0.3), (1, 50, 0.1), (4, 50, 0.1)]
 NS = 2 ** np.arange(4, 13)                      # n = 16 ... 4096
 SHOW = (64, 512, 4096)
@@ -69,7 +69,7 @@ def run_config(d, H, sigma_w):
 
 
 def main():
-    OUT.mkdir(exist_ok=True)
+    OUT.mkdir(parents=True, exist_ok=True)
     results = [run_config(*c) for c in CONFIGS]
     cols = [list(NS).index(n) for n in SHOW]
     mark = lambda lo, hi: "✓" if hi < 1 else "✗" if lo > 1 else "~"

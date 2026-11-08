@@ -93,11 +93,12 @@ Data collected with ROS or PROPS give biased Monte Carlo estimates, because each
 From the repository root:
 
 ```bash
-python -m phase2_5_qmc.experiments.gridworld    # 6 min: QMC samplers vs ROS on the GridWorld (+ figure)
-python -m phase2_5_qmc.experiments.array_rqmc   # 4 min: Array-RQMC, bias and interval coverage
-python -m phase2_5_qmc.experiments.lq           # 1 hour: continuous actions, QMC vs ROS vs PROPS
-python -m phase2_5_qmc.experiments.j_target     # 8 min: a target designed for coordination
-python -m phase2_5_qmc.experiments.merging      # 8 min: prefix-weight merging and Q-ordered actions
+python -m phase2_5_qmc.experiments.gridworld            # 6 min: QMC samplers vs ROS on the GridWorld (+ figure)
+python -m phase2_5_qmc.experiments.array_rqmc           # 4 min: Array-RQMC, bias and interval coverage
+python -m phase2_5_qmc.experiments.j_target             # 8 min: a target designed for coordination
+python -m phase2_5_qmc.experiments.merging              # 8 min: prefix-weight merging and Q-ordered actions
+python -m phase2_5_qmc.experiments.continuous.lq        # 1 hour: continuous actions, QMC vs ROS vs PROPS
+python -m phase2_5_qmc.experiments.continuous.cartpole  # 45 min: continuous states (CartPole), coordinated BPS
 ```
 
 ## Code
@@ -106,6 +107,7 @@ python -m phase2_5_qmc.experiments.merging      # 8 min: prefix-weight merging a
 core/qmc.py            per-state QMC and trajectory-level designs (Sobol, Latin hypercube, antithetic)
 core/array_rqmc.py     Array-RQMC in lockstep, with weight-aware sorting, prefix-weight merging, Q-ordering
 core/lq.py             linear-quadratic testbed (exact value) and its samplers, including ROS and PROPS
+core/cartpole.py       CartPole-v0 with the ROS repo's policy: i.i.d., ROS, Array-RQMC and in-budget BPS samplers
 core/j_target.py       the variance left after coordination (J), its exact gradient and its minimizer
 ```
 

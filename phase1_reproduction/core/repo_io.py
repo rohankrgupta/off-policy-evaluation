@@ -100,15 +100,36 @@ def _arrays(obj, seen=None):
     return [a for c in children for a in _arrays(c, seen)]
 
 
-def policy_logits(name):
-    """Logit table (n_states, n_actions) of the repo policy policy_models/model_<name>.pt."""
+def _load_module(name):
+    """The pickled torch module of policy_models/model_<name>.pt, with tensors as NumPy arrays."""
     with zipfile.ZipFile(REPO / "policy_models" / f"model_{name}.pt") as zf:
         pkl = next(n for n in zf.namelist() if n.endswith("data.pkl"))
         with zf.open(pkl) as f:
-            module = _TorchUnpickler(f, zf, pkl[: -len("/data.pkl")]).load()
+            return _TorchUnpickler(f, zf, pkl[: -len("/data.pkl")]).load()
+
+
+def policy_logits(name):
+    """Logit table (n_states, n_actions) of the repo policy policy_models/model_<name>.pt."""
+    module = _load_module(name)
     tables = [a for a in _arrays(module) if a.ndim == 2]     # the actor's Embedding weight
     assert len(tables) == 1, [a.shape for a in tables]
     return tables[0].astype(np.float64)
+
+
+def policy_tensors(name):
+    """Named parameters and buffers of a repo policy network, e.g. {"model.0.1.weight": (64, 4) array, ...}."""
+    out = {}
+
+    def walk(module, prefix):
+        for group in ("_parameters", "_buffers"):
+            for key, val in (module.__dict__.get(group) or {}).items():
+                if isinstance(val, np.ndarray):
+                    out[prefix + key] = val.astype(np.float64)
+        for key, sub in (module.__dict__.get("_modules") or {}).items():
+            walk(sub, f"{prefix}{key}.")
+
+    walk(_load_module(name), "")
+    return out
 
 
 class _SafeUnpickler(pickle.Unpickler):
