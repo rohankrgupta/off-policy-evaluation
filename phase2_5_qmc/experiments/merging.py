@@ -1,6 +1,6 @@
 """Prefix-weight merging and Q-ordered actions for Array-RQMC with the BPS target (core/array_rqmc.py).
 
-Domains: deterministic GridWorld with pi_e-A and pi_e-B, and the noisy GridWorlds of Phase 3 (slip 0.1, slip 0.2,
+Domains: deterministic GridWorld with pi_e-A and pi_e-B, and the noisy GridWorlds (slip 0.1, slip 0.2,
 slip 0.1 + noisy trap) with pi_e-B. Sampling policy: the exact BPS target. n = 64 / 512 / 8192, 1000 seeds.
 
 Methods, all PDIS from Array-RQMC unless noted:
@@ -19,10 +19,9 @@ import numpy as np
 
 from phase1_reproduction.core import exact, sampling, stats
 from phase2_5_qmc.core import array_rqmc, j_target
-from phase2_5_qmc.experiments.gridworld import ALPHAS, N_EVAL, N_TUNE, domains as gridworld_domains, md
+from phase2_5_qmc.experiments.gridworld import ALPHAS, N_EVAL, N_TUNE, domains as gridworld_domains, md, noisy_domains
 from phase2_bps_plus_ros.core import bps_ros
-from phase3_mb_allocation.core import allocation
-from phase3_mb_allocation.experiments.gridworld import domains as noisy_domains
+from archived.phase3_mb_allocation.core import allocation    # the exact model-based variance (reference row)
 
 OUT = Path(__file__).resolve().parents[1] / "results"
 SHOW = (64, 512, 8192)

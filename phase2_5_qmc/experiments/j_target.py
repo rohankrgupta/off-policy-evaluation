@@ -1,6 +1,6 @@
 """A behavior policy designed for coordinated sampling (core/j_target.py), against BPS's target and ROS-MC.
 
-Domains: Phase 3's noisy GridWorlds (slip 0.1, slip 0.2, slip 0.1 + noisy trap) with pi_e-B. In a deterministic
+Domains: the noisy GridWorlds (slip 0.1, slip 0.2, slip 0.1 + noisy trap) with pi_e-B. In a deterministic
 GridWorld J is identically 0, so it has nothing to optimize there.
 
 Methods (n = 64 / 512 / 8192 episodes, 1000 seeds):
@@ -20,9 +20,8 @@ import numpy as np
 
 from phase1_reproduction.core import exact, sampling, stats
 from phase2_5_qmc.core import array_rqmc, j_target
-from phase2_5_qmc.experiments.gridworld import ALPHAS, N_EVAL, N_TUNE, md
+from phase2_5_qmc.experiments.gridworld import ALPHAS, N_EVAL, N_TUNE, md, noisy_domains
 from phase2_bps_plus_ros.core import bps_ros
-from phase3_mb_allocation.experiments.gridworld import domains
 
 OUT = Path(__file__).resolve().parents[1] / "results"
 SHOW = (64, 512, 8192)
@@ -63,7 +62,7 @@ def run_domain(name, mdp, th_e):
 
 def main():
     OUT.mkdir(exist_ok=True)
-    results = [run_domain(*d) for d in domains()]
+    results = [run_domain(*d) for d in noisy_domains()]
     mark = lambda lo, hi: "✓" if hi < 1 else "✗" if lo > 1 else "~"
     acc, contrasts = [], []
     for D in results:

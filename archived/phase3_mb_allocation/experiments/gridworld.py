@@ -18,7 +18,7 @@ Each allocation is run twice:
     pi_e. The stage-1 steps count toward the budget and are pooled into the MB estimate.
 alpha (ROS) is tuned per method on 500 separate seeds; results use 1000 seeds.
 
-Run:    python -m phase3_mb_allocation.experiments.gridworld     (about 6 min)
+Run:    python -m archived.phase3_mb_allocation.experiments.gridworld     (about 6 min)
 Output: results/gridworld.md, results/gridworld.png
 """
 import multiprocessing as mp
@@ -27,8 +27,9 @@ from pathlib import Path
 import matplotlib
 import numpy as np
 
-from phase1_reproduction.core import envs, exact, stats
-from phase3_mb_allocation.core import allocation, collect
+from phase1_reproduction.core import exact, stats
+from archived.phase3_mb_allocation.core import allocation, collect
+from phase2_5_qmc.experiments.gridworld import noisy_domains as domains
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
@@ -36,15 +37,6 @@ import matplotlib.pyplot as plt  # noqa: E402
 OUT = Path(__file__).resolve().parents[1] / "results"
 ALPHAS = (1e2, 1e3, 1e4, 1e5)
 N_EVAL, N_TUNE = 1000, 500
-
-
-def domains():
-    pi_b = envs.eps_greedy_logits(envs.repo_policy_logits("GridWorld_5000", envs.gridworld()), 0.7,
-                                  envs.gridworld().terminal)
-    trap = envs.gridworld(slip=0.1)
-    trap.reward_std[:, :, envs.TRAP] = np.where(trap.P[:, :, envs.TRAP] > 0, 11.5, 0.0)
-    return [("slip 0.1", envs.gridworld(slip=0.1), pi_b), ("slip 0.2", envs.gridworld(slip=0.2), pi_b),
-            ("slip 0.1 + noisy trap", trap, pi_b)]
 
 
 def _fit(job):

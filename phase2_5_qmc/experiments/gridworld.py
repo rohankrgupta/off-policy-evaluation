@@ -39,6 +39,17 @@ def domains():
     return [("πe-A", g, pi_a), ("πe-B", g, pi_b), ("πe-B, slippery", envs.gridworld(slip=0.1), pi_b)]
 
 
+def noisy_domains():
+    """GridWorld with slip 0.1, with slip 0.2, and with slip 0.1 plus Gaussian reward noise (std 11.5) on every
+    transition into the trap; pi_e = the repo's epsilon-greedy 0.7 policy (pi_e-B)."""
+    pi_b = envs.eps_greedy_logits(envs.repo_policy_logits("GridWorld_5000", envs.gridworld()), 0.7,
+                                  envs.gridworld().terminal)
+    trap = envs.gridworld(slip=0.1)
+    trap.reward_std[:, :, envs.TRAP] = np.where(trap.P[:, :, envs.TRAP] > 0, 11.5, 0.0)
+    return [("slip 0.1", envs.gridworld(slip=0.1), pi_b), ("slip 0.2", envs.gridworld(slip=0.2), pi_b),
+            ("slip 0.1 + noisy trap", trap, pi_b)]
+
+
 def run_domain(name, mdp, th_e):
     pe = exact.softmax(th_e)
     v, var = exact.value(mdp, pe), exact.return_variance(mdp, pe)

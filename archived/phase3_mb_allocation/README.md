@@ -1,4 +1,6 @@
-# Phase 3: Model-based estimation with an optimized allocation
+# Phase 3 (archived): Model-based estimation with an optimized allocation
+
+*Archived: no longer under active consideration. Phase 2.5 is the main finding.*
 
 Phase 2 found two reasons BPS + ROS fails. Phase 3 removes both:
 
@@ -69,7 +71,7 @@ Full tables, with MSE at T/4, T/2 and T and predicted vs simulated values: [resu
 From the repository root:
 
 ```bash
-python -m phase3_mb_allocation.experiments.gridworld   # 2 min; writes results/gridworld.{md,png}
+python -m archived.phase3_mb_allocation.experiments.gridworld   # 2 min; writes results/gridworld.{md,png}
 ```
 
 ## Code
