@@ -98,7 +98,8 @@ python -m phase2_5_qmc.experiments.array_rqmc           # 4 min: Array-RQMC, bia
 python -m phase2_5_qmc.experiments.j_target             # 8 min: a target designed for coordination
 python -m phase2_5_qmc.experiments.merging              # 8 min: prefix-weight merging and Q-ordered actions
 python -m phase2_5_qmc.experiments.continuous.lq        # 1 hour: continuous actions, QMC vs ROS vs PROPS
-python -m phase2_5_qmc.experiments.continuous.cartpole  # 45 min: continuous states (CartPole), coordinated BPS
+python -m phase2_5_qmc.experiments.continuous.cartpole discrete    # 45 min: CartPole, discrete actions
+python -m phase2_5_qmc.experiments.continuous.cartpole continuous  # 55 min: CartPole, continuous actions
 ```
 
 ## Code
@@ -107,7 +108,7 @@ python -m phase2_5_qmc.experiments.continuous.cartpole  # 45 min: continuous sta
 core/qmc.py            per-state QMC and trajectory-level designs (Sobol, Latin hypercube, antithetic)
 core/array_rqmc.py     Array-RQMC in lockstep, with weight-aware sorting, prefix-weight merging, Q-ordering
 core/lq.py             linear-quadratic testbed (exact value) and its samplers, including ROS and PROPS
-core/cartpole.py       CartPole-v0 with the ROS repo's policy: i.i.d., ROS, Array-RQMC and in-budget BPS samplers
+core/cartpole.py       the ROS repo's CartPole tasks and policies: i.i.d., ROS, Array-RQMC and in-budget BPS samplers
 core/j_target.py       the variance left after coordination (J), its exact gradient and its minimizer
 ```
 

@@ -1,8 +1,9 @@
-"""Continuous states: coordinated BPS on CartPole, the ROS repo's continuous-state benchmark (core/cartpole.py).
+"""Continuous states: coordinated BPS on the ROS repo's CartPole benchmarks (core/cartpole.py).
 
-Domains: CartPole-v0 with the repo's CartPole_1000 policy, without and with Gaussian force noise (std 3 N).
-Ground truth: 3e7 on-policy episodes. n = 64 / 512 / 4096 episodes, 1000 seeds; hyperparameters are tuned at each n
-on 500 other seeds.
+Tasks: "discrete" = CartPole-v0 with the repo's CartPole_1000 policy (push left / right); "continuous" = the repo's
+continuous-action CartPole with its CartPoleContinuous_3000 Gaussian policy. Each runs without and with Gaussian force
+noise (std 3 N). Ground truth: 3e7 on-policy episodes. n = 64 / 512 / 4096 episodes, 1000 seeds; hyperparameters are
+tuned at each n on 500 other seeds.
 
 Part A, BPS target given: a fixed target learned beforehand by BPG (bpg_target; its episodes are reported, not
 counted), like the exact targets of the GridWorld experiments.
@@ -13,15 +14,17 @@ Part B, every episode counted, including those that learn the target (BPG learni
     Its gradient uses rewards divided by the true value, as the repo does, so the repo's learning rates apply;
   BPS online, then Array-RQMC: BPG on the first n/2 episodes, Array-RQMC with the learned target on the rest.
 The sort key (a linear value fit on 20000 on-policy episodes) is not counted; without merging it affects only the
-variance. Reference rows (noise 0): the ROS repo's stored CartPole runs (200 seeds) for OS, ROS (lr 10) and its
-online BPG (lr 5e-5) with OIS, at the same number of environment steps.
+variance. Reference rows (noise 0): the repo's stored runs (200 seeds) for OS, ROS and its online BPG with OIS (each
+with the repo's chosen learning rate), at the same number of environment steps.
 
 Reported: n·MSE/Var(g) per episode and at equal environment steps (on-policy MC = 1), bias/SE, coverage and width of
 95% t-intervals from groups of 10 runs, wall-clock time per episode at n = 4096 (10 cores), paired MSE ratios.
 
-Run:    python -m phase2_5_qmc.experiments.continuous.cartpole     (about 45 minutes)
-Output: results/continuous/cartpole.md
+Run:    python -m phase2_5_qmc.experiments.continuous.cartpole discrete      (about 45 minutes)
+        python -m phase2_5_qmc.experiments.continuous.cartpole continuous    (about 45 minutes)
+Output: results/continuous/cartpole.md, results/continuous/cartpole_continuous.md
 """
+import sys
 import time
 from pathlib import Path
 
@@ -36,19 +39,30 @@ OUT = Path(__file__).resolve().parents[2] / "results" / "continuous"
 NS = (64, 512, 4096)
 N_EVAL, N_TUNE = 1000, 500
 NOISES = (0.0, 3.0)
-LRS = (3.0, 10.0, 30.0)                 # ROS learning rates (the repo's best for CartPole is 10)
-BPG_LRS = (5e-5, 1e-4, 2e-4, 4e-4, 8e-4) # online BPG learning rates in Part B, on the repo's reward scale
-REPO = {"OS-MC (ROS repo, stored)": "OnPolicySampler1_MonteCarlo",
-        "ROS-MC, lr 10 (ROS repo, stored)": "RobustOnPolicySampler2_MonteCarlo",
-        "BPS online, OIS (ROS repo's BPG, stored)": "BehaviorPolicyGradient2_OrdinaryImportanceSampling"}
-REPO_TRUE_VALUE = 36.045859992477716    # the repo stores estimates divided by its true value
+TASKS = {   # ROS and online-BPG grids around the repo's choices; bpg_step = the offline BPS step size
+    "discrete": dict(policy="CartPole_1000", title="CartPole (discrete actions)", out="cartpole.md",
+                     ros_lrs=(3.0, 10.0, 30.0), bpg_lrs=(5e-5, 1e-4, 2e-4, 4e-4, 8e-4), bpg_step=0.05,
+                     folder="cartpole", repo_value=36.045859992477716,
+                     repo={"OS-MC (ROS repo, stored)": "OnPolicySampler1_MonteCarlo",
+                           "ROS-MC, lr 10 (ROS repo, stored)": "RobustOnPolicySampler2_MonteCarlo",
+                           "BPS online, OIS (ROS repo's BPG, stored)":
+                               "BehaviorPolicyGradient2_OrdinaryImportanceSampling"}),
+    "continuous": dict(policy="CartPoleContinuous_3000", title="CartPole (continuous actions)",
+                       out="cartpole_continuous.md", ros_lrs=(0.03, 0.1, 0.3),
+                       bpg_lrs=(1.25e-7, 2.5e-7, 5e-7, 1e-6, 2e-6), bpg_step=0.002,
+                       folder="con_cartpole", repo_value=35.35066209876531,
+                       repo={"OS-MC (ROS repo, stored)": "OnPolicySampler1_MonteCarlo",
+                             "ROS-MC, lr 0.1 (ROS repo, stored)": "RobustOnPolicySampler2_MonteCarlo",
+                             "BPS online, OIS (ROS repo's BPG, stored)":
+                                 "BehaviorPolicyGradient5_OrdinaryImportanceSampling"}),
+}
 PART_A = ("OS-MC", "ROS-MC", "BPS + OIS (i.i.d.)", "BPS + PDIS (i.i.d.)", "Array-RQMC, on-policy (MC)",
           "BPS + Array-RQMC, OIS", "BPS + Array-RQMC, PDIS", "BPS + Array-RQMC, PDIS, merged pairs")
-PART_B = ("OS-MC", "ROS-MC", "BPS online, OIS [1]", "BPS online, then Array-RQMC, OIS", *REPO)
+PART_B = ("OS-MC", "ROS-MC", "BPS online, OIS [1]", "BPS online, then Array-RQMC, OIS")
 CONTRASTS = (("BPS + Array-RQMC, OIS", "BPS + OIS (i.i.d.)"), ("BPS + Array-RQMC, OIS", "ROS-MC"),
              ("BPS + Array-RQMC, PDIS", "BPS + PDIS (i.i.d.)"),
              ("BPS + Array-RQMC, PDIS, merged pairs", "BPS + Array-RQMC, PDIS"),
-             ("Array-RQMC, on-policy (MC)", "OS-MC"),
+             ("Array-RQMC, on-policy (MC)", "OS-MC"), ("Array-RQMC, on-policy (MC)", "ROS-MC"),
              ("BPS online, then Array-RQMC, OIS", "BPS online, OIS [1]"),
              ("BPS online, then Array-RQMC, OIS", "ROS-MC"), ("BPS online, OIS [1]", "ROS-MC"))
 
@@ -57,21 +71,21 @@ def log(msg):
     print(time.strftime("%H:%M:%S"), msg, flush=True)
 
 
-def run_domain(noise):
-    pi_e = cp.load_pi_e()
+def run_domain(task, noise):
+    pi_e = cp.load_pi_e(task["policy"])
     truth = cp.iid(pi_e, None, 1_000_000, 30, "truth", noise)
     v = truth["MC"].mean()
     var = truth["G2"].mean() - v * v
     L_e = truth["length"].mean()
     vw = cp.fit_value(pi_e, noise)
     t0 = time.perf_counter()
-    th_b = cp.bpg_target(pi_e, noise)
+    th_b = cp.bpg_target(pi_e, noise, step=task["bpg_step"])
     t_bpg = time.perf_counter() - t0
     chk = cp.iid(pi_e, th_b, 100_000, 10, "target-check", noise)
     D = {"noise": noise, "v": v, "se": truth["MC"].std(ddof=1) / np.sqrt(30), "var": var, "L_e": L_e,
          "t_bpg": t_bpg, "target_var": (chk["OIS2"].mean() - v * v) / var, "target_len": chk["length"].mean()}
-    log(f"noise {noise}: v = {v:.4f} ± {D['se']:.4f}, Var(g) = {var:.1f}, BPS target {D['target_var']:.3f} "
-        f"({t_bpg:.0f}s)")
+    log(f"{task['policy']}, noise {noise}: v = {v:.4f} ± {D['se']:.4f}, Var(g) = {var:.1f}, "
+        f"BPS target {D['target_var']:.3f} ({t_bpg:.0f}s)")
 
     memo, methods = {}, {}
 
@@ -101,7 +115,7 @@ def run_domain(noise):
     bps = cached("bps", lambda n, k, s, h: cp.iid(pi_e, th_b, n, k, s, noise))
     arr = cached("arr", lambda n, k, s, h: cp.array(pi_e, th_b, vw, n, k, s, noise))
     evaluate("OS-MC", os_, "MC")
-    evaluate("ROS-MC", cached("ros", lambda n, k, s, h: cp.ros(pi_e, h, n, k, s, noise)), "MC", LRS)
+    evaluate("ROS-MC", cached("ros", lambda n, k, s, h: cp.ros(pi_e, h, n, k, s, noise)), "MC", task["ros_lrs"])
     evaluate("BPS + OIS (i.i.d.)", bps, "OIS")
     evaluate("BPS + PDIS (i.i.d.)", bps, "PDIS")
     evaluate("Array-RQMC, on-policy (MC)", cached("arr-on", lambda n, k, s, h: cp.array(pi_e, None, vw, n, k, s, noise)),
@@ -110,23 +124,24 @@ def run_domain(noise):
     evaluate("BPS + Array-RQMC, PDIS", arr, "PDIS")
     evaluate("BPS + Array-RQMC, PDIS, merged pairs",
              cached("merge", lambda n, k, s, h: cp.array(pi_e, th_b, vw, n, k, s, noise, block=2)), "PDIS")
-    evaluate("BPS online, OIS [1]", cached("online", lambda n, k, s, h: cp.two_stage(pi_e, vw, n, n, h / v ** 2, k, s, noise)),
-             "OIS", BPG_LRS)
+    evaluate("BPS online, OIS [1]",
+             cached("online", lambda n, k, s, h: cp.two_stage(pi_e, vw, n, n, h / v ** 2, k, s, noise)), "OIS",
+             task["bpg_lrs"])
     evaluate("BPS online, then Array-RQMC, OIS",
              cached("online-arr", lambda n, k, s, h: cp.two_stage(pi_e, vw, n, n // 2, h / v ** 2, k, s, noise)), "OIS",
-             BPG_LRS)
+             task["bpg_lrs"])
     if noise == 0.0:                            # the repo's stored runs: checkpoint j = 2^j episodes' worth of steps
-        for name, file in REPO.items():
-            est, steps = repo_io.stored_run("cartpole", f"CartPole_1000_{file}")
+        for name, file in task["repo"].items():
+            est, steps = repo_io.stored_run(task["folder"], f"{task['policy']}_{file}")
             idx = [int(np.log2(n)) for n in NS]
-            methods[name] = {"est": est[:, idx] * REPO_TRUE_VALUE, "length": np.full(len(NS), L_e), "chosen": None,
+            methods[name] = {"est": est[:, idx] * task["repo_value"], "length": np.full(len(NS), L_e), "chosen": None,
                              "us": None, "n": steps[idx] / L_e}
     D["methods"] = methods
     return D
 
 
-def report(results):
-    text = ["# Coordinated BPS in a continuous state space: CartPole\n",
+def report(task, results):
+    text = [f"# Coordinated BPS in a continuous state space: {task['title']}\n",
             "n·MSE/Var(g): on-policy Monte Carlo = 1, lower is better; 1000 seeds (stored repo rows: 200). "
             "'Equal steps' rescales by the method's mean episode length, i.e. compares at equal environment steps. "
             "Coverage: 95% t-intervals from groups of 10 runs. Time: µs per episode at n = 4096 on 10 cores.\n"]
@@ -138,7 +153,8 @@ def report(results):
                     f"length {D['target_len']:.1f}; learned offline in {D['t_bpg']:.0f} s from 3.2e6 episodes (6e5 for the "
                     "gradient steps, 2.6e6 for validation; not counted in Part A).\n")
         width = {n: ci_stats(M["OS-MC"]["est"][:, j], v, 1.0)[1] for j, n in enumerate(NS)}
-        for part, names in (("Part A: BPS target given", PART_A), ("Part B: every episode counted", PART_B)):
+        for part, names in (("Part A: BPS target given", PART_A),
+                            ("Part B: every episode counted", PART_B + tuple(task["repo"]))):
             rows = []
             for name in names:
                 if name not in M:
@@ -165,14 +181,15 @@ def report(results):
     return "\n".join(text)
 
 
-def main():
+def main(name="discrete"):
+    task = TASKS[name]
     OUT.mkdir(parents=True, exist_ok=True)
     results = []
     for noise in NOISES:
-        results.append(run_domain(noise))
-        (OUT / "cartpole.md").write_text(report(results))     # partial results survive an interruption
-    print(report(results))
+        results.append(run_domain(task, noise))
+        (OUT / task["out"]).write_text(report(task, results))     # partial results survive an interruption
+    print(report(task, results))
 
 
 if __name__ == "__main__":
-    main()
+    main(*sys.argv[1:])
